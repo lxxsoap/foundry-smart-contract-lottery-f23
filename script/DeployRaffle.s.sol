@@ -18,20 +18,22 @@ contract DeployRaffle is Script {
             bytes32 gasLane,
             uint64 subscriptionId,
             uint32 callbackGasLimit,
-            address link
+            address link,
+            uint256 deployerKey
         ) = helperConfig.activeNetworkConfig();
-          if (subscriptionId == 0) {
+        if (subscriptionId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
             subscriptionId = createSubscription.createSubscription(
-                vrfCoordinator
+                vrfCoordinator,
+                deployerKey
             );
             //fund it
             FundSubscription f = new FundSubscription();
-            f.fundSubscription(vrfCoordinator, subscriptionId, link);
+            f.fundSubscription(vrfCoordinator, subscriptionId, link,
+                deployerKey);
         }
 
-        
-        vm.startBroadcast();
+        vm.startBroadcast(deployerKey);
         Raffle raffle = new Raffle(
             entranceFee,
             interval,
@@ -40,10 +42,10 @@ contract DeployRaffle is Script {
             subscriptionId,
             callbackGasLimit
         );
-      
+
         vm.stopBroadcast();
         AddConsumer add = new AddConsumer();
-        add.addConsumer(address(raffle),vrfCoordinator,subscriptionId);
+        add.addConsumer(address(raffle), vrfCoordinator, subscriptionId,deployerKey);
         return (raffle, helperConfig);
     }
 }
